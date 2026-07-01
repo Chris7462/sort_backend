@@ -53,10 +53,10 @@ void KalmanBoxTracker::initializeKalmanMatrices()
   kf_.Q.block<3, 3>(4, 4) *= 0.01f;  // Lower process noise for velocities
 
   // Initial state covariance P
-  Eigen::MatrixXf & P = const_cast<Eigen::MatrixXf &>(kf_.getCovariance());
-  P = Eigen::MatrixXf::Identity(7, 7);
+  Eigen::MatrixXf P = Eigen::MatrixXf::Identity(7, 7);
   P.block<3, 3>(4, 4) *= 1000.0f;  // High uncertainty for initial velocities
   P *= 10.0f;  // Overall higher initial uncertainty
+  kf_.setCovariance(P);
 }
 
 void KalmanBoxTracker::update(const Vector4f & bbox)

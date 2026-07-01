@@ -10,9 +10,13 @@
 #include <cmath>
 #include <random>
 
-#include <opencv2/opencv.hpp>
+#include <Eigen/Dense>
 
-#include "sort_backend/sort.hpp"
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
+
+#include "sort_backend/sort_backend.hpp"
 
 
 namespace fs = std::filesystem;

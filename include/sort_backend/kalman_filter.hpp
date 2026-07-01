@@ -48,6 +48,12 @@ public:
   void setState(const VectorXf & x);
 
   /**
+   * @brief Set state covariance matrix
+   * @param P New covariance matrix
+   */
+  void setCovariance(const MatrixXf & P);
+
+  /**
    * @brief Get state covariance matrix
    * @return Current covariance matrix
    */

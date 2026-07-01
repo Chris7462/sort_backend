@@ -1,20 +1,21 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.20)
 
 project(sort_backend
   VERSION 1.0.0
   DESCRIPTION "C++ implementation of Simple Online and Realtime Tracking (SORT) backend"
   LANGUAGES CXX)
 
+# Default to a Release build if the user doesn't specify one
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+  message(STATUS "No build type specified, defaulting to 'Release'.")
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
 endif()
 
+option(BUILD_EXAMPLE "Build the sort_main example (requires OpenCV)" OFF)
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(Eigen3 REQUIRED)
 find_package(hungarian REQUIRED)
 
 # Create library
@@ -24,38 +25,31 @@ add_library(${PROJECT_NAME} STATIC
   src/utils.cpp
   src/sort_backend.cpp)
 
-add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-
-target_include_directories(${PROJECT_NAME}
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+target_include_directories(${PROJECT_NAME} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(${PROJECT_NAME}
-  PRIVATE
+  PUBLIC
     Eigen3::Eigen
+  PRIVATE
     hungarian::hungarian)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
-    $<$<COMPILE_LANGUAGE:CXX>: -Wall -Wextra -Wpedantic>
-)
+  -Wall
+  -Wextra
+  -Wpedantic)
 
 # Optionally install the library
 install(TARGETS ${PROJECT_NAME}
   EXPORT export_${PROJECT_NAME}
-  #LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  #RUNTIME DESTINATION bin
-  # LIBRARY and RUNTIME are unused for static libs but harmless
-  INCLUDES DESTINATION include
-)
+  ARCHIVE DESTINATION lib)
 
 # Install header files
 install(DIRECTORY include/
-  DESTINATION include
-  FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+  DESTINATION include)
 
 # Export targets and dependencies
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
@@ -63,26 +57,26 @@ ament_export_dependencies(Eigen3 hungarian) # Build static library, so downstrea
 
 # Build example
 if(BUILD_EXAMPLE)
-  find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs highgui)
+  find_package(OpenCV REQUIRED COMPONENTS highgui imgcodecs imgproc)
 
-  add_executable(sort_main example/sort_main.cpp)
+  add_executable(${PROJECT_NAME}_example example/sort_main.cpp)
 
-  target_link_libraries(sort_main
-    PRIVATE
-      ${PROJECT_NAME}
-      Eigen3::Eigen
-      ${OpenCV_LIBS})
+  target_include_directories(${PROJECT_NAME}_example PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-  target_include_directories(sort_main
-    PRIVATE
-      ${CMAKE_CURRENT_SOURCE_DIR}/include
-      ${OpenCV_INCLUDE_DIRS})
+  target_link_libraries(${PROJECT_NAME}_example PRIVATE
+    ${PROJECT_NAME}
+    Eigen3::Eigen
+    opencv_highgui
+    opencv_imgcodecs
+    opencv_imgproc)
 
-  target_compile_features(sort_main PRIVATE cxx_std_17)
+  target_compile_features(${PROJECT_NAME}_example PRIVATE cxx_std_17)
 
-  target_compile_options(sort_main PRIVATE
-      $<$<COMPILE_LANGUAGE:CXX>: -Wall -Wextra -Wpedantic>
-  )
+  target_compile_options(${PROJECT_NAME}_example PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic)
 endif()
 
 if(BUILD_TESTING)
@@ -105,8 +99,8 @@ if(BUILD_TESTING)
     test_sort_backend)
 
   foreach(test_src ${test_sources})
-    ament_add_gtest(${test_src} test/${test_src}.cpp)
-    target_link_libraries(${test_src}
+    ament_add_gtest(${PROJECT_NAME}_${test_src} test/${test_src}.cpp)
+    target_link_libraries(${PROJECT_NAME}_${test_src}
       ${PROJECT_NAME}
       Eigen3::Eigen)
   endforeach()

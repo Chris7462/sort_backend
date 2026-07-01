@@ -28,18 +28,24 @@ To compare results with the original Python implementation of [sort](https://git
     ```bash
     colcon build --symlink-install --packages-select sort_backend --cmake-args -DBUILD_EXAMPLE=ON
     ```
+    **Note:** if `sort_backend` was already built without this flag, colcon may not
+    pick up the new CMake option automatically. Force a clean reconfigure first:
+    ```bash
+    rm -rf build/sort_backend install/sort_backend
+    colcon build --symlink-install --packages-select sort_backend --cmake-args -DBUILD_EXAMPLE=ON
+    ```
 2. Download the [MOT15 dataset](https://motchallenge.net/data/MOT15/).
-2. Create a symbolic link to the dataset:
+3. Create a symbolic link to the dataset:
     ```bash
     cd ${ros2_workspace}/build/sort_backend
     ln -s /path/to/MOT15 .
     ```
-3. Run the example:
-    ```
+4. Run the example:
+    ```bash
     ./sort_main
     ```
     This will write tracking results to the `output` folder.
-4. To display results with visualization:
-    ```
+5. To display results with visualization:
+    ```bash
     ./sort_main --display
     ```

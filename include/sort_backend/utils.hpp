@@ -5,6 +5,9 @@
 
 #pragma once
 
+#include <tuple>
+#include <vector>
+
 #include <Eigen/Dense>
 
 
@@ -37,7 +40,9 @@ VectorXf convertXToBbox(const VectorXf & x, float score = -1.0f);
 
 /**
  * @brief Compute IoU (Intersection over Union) between detection and tracker bboxes
- * @param bb_test Detection bounding boxes, each row is [x1, y1, x2, y2, score]
+ * @param bb_test Detection bounding boxes; only columns 0-3, [x1, y1, x2, y2],
+ *                are read. Extra columns (e.g. a trailing score) are ignored,
+ *                so callers may pass either a [N x 4] or [N x 5] matrix.
  * @param bb_gt Tracker bounding boxes, each row is [x1, y1, x2, y2]
  * @return IoU matrix where element (i,j) is IoU between detection i and tracker j
  */
