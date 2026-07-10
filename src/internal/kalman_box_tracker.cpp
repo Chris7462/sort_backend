@@ -1,5 +1,5 @@
-#include "sort_backend/kalman_box_tracker.hpp"
-#include "sort_backend/utils.hpp"
+#include "internal/kalman_box_tracker.hpp"
+#include "internal/utils.hpp"
 
 
 namespace sort
@@ -14,7 +14,6 @@ KalmanBoxTracker::KalmanBoxTracker(const Vector4f & bbox)
   hit_streak_(0),
   age_(0)
 {
-
   initializeKalmanMatrices();
 
   // Set initial state from bounding box

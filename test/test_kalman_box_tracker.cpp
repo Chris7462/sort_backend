@@ -10,8 +10,8 @@
 #include <gtest/gtest.h>
 
 // Local includes
-#include "sort_backend/kalman_box_tracker.hpp"
-#include "sort_backend/utils.hpp"
+#include "internal/kalman_box_tracker.hpp"
+#include "internal/utils.hpp"
 
 
 using namespace Eigen;

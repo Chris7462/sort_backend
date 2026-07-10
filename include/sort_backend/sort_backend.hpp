@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// sort.hpp: Simple Online and Realtime Tracking (SORT) algorithm
+// sort_backend.hpp: Simple Online and Realtime Tracking (SORT) algorithm
 // Multi-object tracker using Kalman filters and Hungarian algorithm
 // Tracks objects across frames using bounding box detections
 ///////////////////////////////////////////////////////////////////////////////
@@ -7,11 +7,7 @@
 #pragma once
 
 #include <Eigen/Dense>
-#include <vector>
 #include <memory>
-
-#include "sort_backend/kalman_box_tracker.hpp"
-
 
 namespace sort
 {
@@ -29,6 +25,17 @@ public:
    * @param iou_threshold Minimum IoU for detection-tracker association
    */
   explicit Sort(int max_age = 1, int min_hits = 3, float iou_threshold = 0.3f);
+
+  /**
+   * @brief Destructor (defined in .cpp: required since Impl is incomplete here)
+   */
+  ~Sort();
+
+  // Non-copyable - Impl is exclusively owned; movable is cheap and safe.
+  Sort(const Sort &) = delete;
+  Sort & operator=(const Sort &) = delete;
+  Sort(Sort &&) noexcept;
+  Sort & operator=(Sort &&) noexcept;
 
   /**
    * @brief Update tracker with new detections
@@ -57,27 +64,10 @@ public:
   void reset();
 
 private:
-  // SORT parameters
-  int max_age_;           // Maximum frames without detection before deletion
-  int min_hits_;          // Minimum hits before tracker is confirmed
-  float iou_threshold_;   // IoU threshold for association
-
-  // Tracker state
-  std::vector<std::unique_ptr<KalmanBoxTracker>> trackers_;
-  int frame_count_;       // Current frame number
-
-  /**
-   * @brief Remove trackers that have invalid predictions (NaN values)
-   * @param predicted_tracks Matrix of predicted tracker states
-   * @return Indices of trackers to remove
-   */
-  std::vector<int> findInvalidTrackers(const MatrixXf & predicted_tracks);
-
-  /**
-   * @brief Build output matrix from confirmed trackers
-   * @return Matrix where each row is [x1, y1, x2, y2, track_id]
-   */
-  MatrixXf buildOutputTracks();
+  // Opaque implementation - hides KalmanBoxTracker, KalmanFilter, and the
+  // Hungarian algorithm dependency from consumers of this header.
+  class Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 } // namespace sort
