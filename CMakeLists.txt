@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(sort_backend
   VERSION 1.0.0
-  DESCRIPTION "C++ implementation of Simple Online and Realtime Tracking (SORT) backend"
+  DESCRIPTION "C++ implementation of Simple Online and Realtime Tracking backend"
   LANGUAGES CXX)
 
 # Default to a Release build if the user doesn't specify one
@@ -20,14 +20,23 @@ find_package(hungarian REQUIRED)
 
 # Create library
 add_library(${PROJECT_NAME} STATIC
-  src/kalman_filter.cpp
-  src/kalman_box_tracker.cpp
-  src/utils.cpp
-  src/sort_backend.cpp)
+  src/sort_backend.cpp
+  src/internal/sort_impl.cpp
+  src/internal/kalman_filter.cpp
+  src/internal/kalman_box_tracker.cpp
+  src/internal/utils.cpp)
 
-target_include_directories(${PROJECT_NAME} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+  PRIVATE
+    # Implementation-only headers under src/internal/. Adding src/ here (not
+    # src/internal/) lets files inside src/internal/ use the quote-include
+    # form "internal/xxx.hpp" consistently, matching how src/sort_backend.cpp
+    # already resolves "internal/sort_impl.hpp" relative to its own directory.
+    # Never installed - purely a build-time path.
+    ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(${PROJECT_NAME}
   PUBLIC
@@ -47,7 +56,7 @@ install(TARGETS ${PROJECT_NAME}
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib)
 
-# Install header files
+# Install header files (only include/ is ever installed - src/internal/ never ships)
 install(DIRECTORY include/
   DESTINATION include)
 
@@ -92,14 +101,21 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gtest REQUIRED)
 
-  set(test_sources
+  # Internal-facing tests: all four reach into utils.hpp/kalman_filter.hpp/
+  # kalman_box_tracker.hpp under src/internal/ (test_sort_backend.cpp uses
+  # utils.hpp directly to build test detection matrices), so each target
+  # needs the same PRIVATE include path the library itself uses to resolve
+  # "internal/xxx.hpp".
+  set(internal_test_sources
+    test_sort_backend
     test_utils
     test_kalman_filter
-    test_kalman_box_tracker
-    test_sort_backend)
+    test_kalman_box_tracker)
 
-  foreach(test_src ${test_sources})
+  foreach(test_src ${internal_test_sources})
     ament_add_gtest(${PROJECT_NAME}_${test_src} test/${test_src}.cpp)
+    target_include_directories(${PROJECT_NAME}_${test_src} PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(${PROJECT_NAME}_${test_src}
       ${PROJECT_NAME}
       Eigen3::Eigen)

@@ -13,7 +13,7 @@
 
 // Local includes
 #include "sort_backend/sort_backend.hpp"
-#include "sort_backend/utils.hpp"
+#include "internal/utils.hpp"
 
 
 using namespace Eigen;

@@ -10,7 +10,7 @@
 #include <gtest/gtest.h>
 
 // Local includes
-#include "sort_backend/kalman_filter.hpp"
+#include "internal/kalman_filter.hpp"
 
 
 using namespace Eigen;
